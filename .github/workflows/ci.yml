@@ -13,3 +13,5 @@ jobs:
       - run: pip install -e ".[dev]"
       - run: ruff check .
       - run: pytest -q
+      - name: Dispatch quality regression gate
+        run: python experiments/regression_gate.py

@@ -1,0 +1,29 @@
+{
+  "metrics": {
+    "hungarian_batch.mean_delivery_seconds": 1860.1968141656123,
+    "hungarian_batch.p90_delivery_seconds": 2682.183696883747,
+    "hungarian_batch.percent_faster_than_nearest": 2.4166236172684132,
+    "hungarian_batch.undelivered_orders": 0,
+    "nearest.mean_delivery_seconds": 1909.2540992367574,
+    "nearest.p90_delivery_seconds": 2790.5647505078214,
+    "nearest.undelivered_orders": 0
+  },
+  "scenario": {
+    "batch_interval_seconds": 30.0,
+    "city_radius_km": 5.0,
+    "courier_count": 40,
+    "courier_speed_kmh": 20.0,
+    "max_prep_minutes": 15.0,
+    "min_prep_minutes": 5.0,
+    "order_count": 2000,
+    "orders_per_hour": 60.0,
+    "restaurant_count": 40,
+    "seeds": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ]
+  }
+}
