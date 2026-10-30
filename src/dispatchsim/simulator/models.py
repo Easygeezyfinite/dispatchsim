@@ -8,7 +8,6 @@ wrong delivery times.
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
 
 from dispatchsim.simulator.location import Location
 
@@ -34,10 +33,10 @@ class Order:
     created_at: float  # simulation seconds
     food_ready_at: float  # when the restaurant finishes cooking
     status: OrderStatus = OrderStatus.WAITING_FOR_COURIER
-    courier_id: Optional[str] = None
-    assigned_at: Optional[float] = None
-    picked_up_at: Optional[float] = None
-    delivered_at: Optional[float] = None
+    courier_id: str | None = None
+    assigned_at: float | None = None
+    picked_up_at: float | None = None
+    delivered_at: float | None = None
 
     def __post_init__(self) -> None:
         if self.food_ready_at < self.created_at:
@@ -69,14 +68,14 @@ class Order:
         self.status = OrderStatus.DELIVERED
 
     @property
-    def delivery_time_seconds(self) -> Optional[float]:
+    def delivery_time_seconds(self) -> float | None:
         """Customer-facing number: from placing the order to getting the food."""
         if self.delivered_at is None:
             return None
         return self.delivered_at - self.created_at
 
     @property
-    def wait_for_courier_seconds(self) -> Optional[float]:
+    def wait_for_courier_seconds(self) -> float | None:
         """How long the order sat before any courier was assigned."""
         if self.assigned_at is None:
             return None
@@ -89,7 +88,7 @@ class Courier:
     location: Location
     speed_kmh: float = 20.0  # roughly a bike or scooter in city traffic
     status: CourierStatus = CourierStatus.IDLE
-    current_order_id: Optional[str] = None
+    current_order_id: str | None = None
 
     @property
     def is_available(self) -> bool:
