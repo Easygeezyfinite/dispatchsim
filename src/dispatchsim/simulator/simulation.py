@@ -22,10 +22,12 @@ from dispatchsim.simulator.models import Courier, Order
 # Given an order and the couriers who are idle right now, pick one (or None to
 # leave the order waiting until the next dispatch attempt).
 DispatchPolicy = Callable[[Order, list[Courier]], Courier | None]
+AssignmentObserver = Callable[[Order, Courier, float], None]
 
 
 class Simulation:
     def __init__(self, couriers: list[Courier], dispatch_policy: DispatchPolicy) -> None:
+        self.assignment_observer: AssignmentObserver | None = None
         self.engine = EventEngine()
         self.dispatch_policy = dispatch_policy
         self.couriers = {courier.courier_id: courier for courier in couriers}
@@ -75,6 +77,8 @@ class Simulation:
             self._assign(order, courier, now)
 
     def _assign(self, order: Order, courier: Courier, now: float) -> None:
+        if self.assignment_observer is not None:
+            self.assignment_observer(order, courier, now)
         order.assign(courier.courier_id, now)
         courier.start_order(order.order_id)
         trip = travel_time_seconds(courier.location, order.restaurant, courier.speed_kmh)

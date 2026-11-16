@@ -376,3 +376,45 @@ a time.
 - [x] Docker and write-up with measured results
 - [ ] ETA model (learned travel and prep times)
 - [ ] HTTP load numbers against uvicorn in Docker
+
+## ETA training data (Stage 1)
+
+```bash
+python experiments/generate_eta_data.py --seeds 1 2 3 4 5 --orders 2000 --output data/eta.csv
+# Use separate seeds for later evaluation; never split rows randomly.
+python experiments/generate_eta_data.py --seeds 101 102 --output data/eta_test.csv
+```
+
+This writes one CSV row per **assigned** courier/order pair, plus a
+`.metadata.json` sidecar with the scenario, seeds, strategies and schema version.
+Both existing strategies run with fresh objects on each seed. Generation fails if
+any orders remain undelivered after the existing 24-hour drain period.
+Generated files stay in the ignored `data/` directory.
+
+The target is seconds **from assignment to delivery**, not from order creation.
+Add the observed order age to obtain total order-to-delivery duration. Features are
+snapshotted before assignment: courier-to-restaurant and restaurant-to-customer
+straight-line distances, courier speed, estimated total prep time, order age,
+available courier count and outstanding arrived-order count. In a batch, counts
+reflect earlier assignments in that batch. Outstanding includes waiting and active
+orders, and excludes future orders even though the simulator preloads them.
+
+Prep estimate is the configured uniform distribution's mean (600 seconds by
+default), a scenario assumption available before running. Exact `food_ready_at`,
+pickup/delivery timestamps and future arrivals are excluded. Order age is observable;
+it does not reveal actual elapsed cooking or actual remaining prep. The simulator
+has no meaningful time-of-day effects, and candidates are idle with no workload,
+so neither contributes a feature.
+
+Limitations: these are synthetic, deterministic travel outcomes with random prep,
+not real traffic observations. Only chosen pairs have observed labels; unchosen
+courier outcomes are not training examples. Selection by the existing policies
+can limit generalization to a learned policy's choices. Keep all strategies and
+orders from a seed together in train/test partitions. A preparation-aware analytic
+baseline may outperform a learned model here; modeling and evaluation are still
+unfinished. The assignment observer records data without altering dispatch logic.
+
+For review/interviews: why predict from assignment rather than creation? Queue
+wait is already observed at assignment. Why exclude exact readiness? It is simulator
+truth, not an independently supplied restaurant estimate. Why split by seed?
+Rows from the same simulated city and order stream share conditions.
