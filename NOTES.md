@@ -1,22 +1,14 @@
-# DispatchSim learning log
+# DispatchSim development notes
 
-Keep this file honest and short. It becomes your interview prep sheet.
+## Event engine
 
-## Day 1: event engine
+- Events scheduled for the same simulation time run in scheduling order.
+  A sequence counter breaks ties in the heap so it never compares event objects.
+- `run_until(end_time)` processes events at the cutoff and leaves later events
+  queued for the next call.
 
-**Prediction (before TODO 2):** what happens when two events share the same `happens_at`?
--
+## Time-progression benchmark
 
-**What actually happened, and my fix:**
--
-
-**DoorDash reading:** why did their Geo team choose fixed-increment time progression?
--
-
-**Side quest results:** (paste the benchmark output)
-- 1,000 events:
-- 100,000 events:
-- Why the speedup changed:
-
-**Interview one-liner:**
--
+`experiments/time_progression_benchmark.py` still has an unimplemented
+fixed-increment runner. A speed comparison is pending both implementations
+producing the same event order.
