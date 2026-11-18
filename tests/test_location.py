@@ -22,6 +22,9 @@ def test_one_degree_of_latitude_is_about_111_km():
     one_degree_north = Location(1, 0)
     assert math.isclose(distance_km(equator, one_degree_north), 111.19, rel_tol=0.001)
 
+def test_travel_time_to_same_point_is_zero():
+    assert travel_time_seconds(CALGARY_TOWER, CALGARY_TOWER, 20) == 0
+
 
 def test_distance_is_symmetric():
     there = distance_km(CALGARY_TOWER, UNIVERSITY_OF_CALGARY)

@@ -43,11 +43,20 @@ def test_order_cannot_be_assigned_twice():
         order.assign("courier_2", now=20)
 
 
-def test_pick_up_before_food_is_ready_fails():
+def test_pickup_can_retry_when_food_becomes_ready():
     order = make_order(food_ready_at=600)
     order.assign("courier_1", now=10)
-    with pytest.raises(ValueError):
+
+    with pytest.raises(ValueError, match="food isn't ready"):
         order.pick_up(now=599)
+
+    assert order.status == OrderStatus.ASSIGNED
+    assert order.picked_up_at is None
+
+    order.pick_up(now=600)
+
+    assert order.status == OrderStatus.PICKED_UP
+    assert order.picked_up_at == 600
 
 
 def test_food_ready_before_order_created_is_rejected():
