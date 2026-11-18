@@ -31,11 +31,13 @@ def min_cost_assignment(cost: list[list[float]]) -> list[tuple[int, int]]:
     zero. Adding a row means finding the cheapest chain of swaps that frees up a
     column for it, then shifting potentials so the cells used stay at zero.
     """
-    if not cost or not cost[0]:
+    if not cost:
         return []
     row_count, column_count = len(cost), len(cost[0])
     if any(len(row) != column_count for row in cost):
         raise ValueError("every row of the cost matrix must be the same length")
+    if column_count == 0:
+        return []
 
     # The algorithm below needs rows <= columns. If not, solve the flipped problem.
     if row_count > column_count:

@@ -63,11 +63,13 @@ def test_more_rows_than_columns():
 def test_empty_matrix():
     assert min_cost_assignment([]) == []
     assert min_cost_assignment([[]]) == []
+    assert min_cost_assignment([[], []]) == []
 
 
-def test_ragged_matrix_is_rejected():
-    with pytest.raises(ValueError):
-        min_cost_assignment([[1, 2], [3]])
+@pytest.mark.parametrize("cost", [[[1, 2], [3]], [[], [1]]])
+def test_ragged_matrix_is_rejected(cost):
+    with pytest.raises(ValueError, match="same length"):
+        min_cost_assignment(cost)
 
 
 def test_matches_brute_force_on_random_matrices():
