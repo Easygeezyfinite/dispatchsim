@@ -3,6 +3,7 @@ from random import Random
 import pytest
 
 from dispatchsim.eta_model.baseline import BaselineETAModel
+from dispatchsim.eta_model.factory import create_eta_model
 from dispatchsim.eta_model.rush_hour import RushHourETAModel
 from dispatchsim.simulator.location import Location, travel_time_seconds
 
@@ -53,3 +54,16 @@ def test_rush_hour_travel_and_prep_follow_daily_windows(hour, rush_hour):
     expected_minutes = reference.triangular(5, 15, 15) if rush_hour else reference.uniform(5, 15)
     assert prep == expected_minutes * 60
     assert rng.getstate() == reference.getstate()
+
+
+def test_eta_model_factory_defaults_to_baseline():
+    assert type(create_eta_model()) is BaselineETAModel
+
+
+def test_eta_model_factory_selects_rush_hour():
+    assert type(create_eta_model("rush-hour")) is RushHourETAModel
+
+
+def test_eta_model_factory_rejects_unknown_names():
+    with pytest.raises(ValueError, match="unknown ETA model 'rushhour'"):
+        create_eta_model("rushhour")
