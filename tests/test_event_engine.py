@@ -68,3 +68,19 @@ def test_same_time_events_keep_insertion_order():
     engine.schedule(Event(10, "ping", "scheduled second"))
     engine.run_until(100)
     assert [payload for _, payload in log] == ["scheduled first", "scheduled second"]
+
+def test_same_time_follow_up_runs_after_queued_events_at_cutoff():
+    engine, log = EventEngine(), []
+
+    def schedule_follow_up(event, engine):
+        log.append((engine.current_time, event.payload))
+        engine.schedule(Event(engine.current_time, "ping", "follow-up"))
+
+    engine.on("start", schedule_follow_up)
+    engine.on("ping", record_into(log))
+    engine.schedule(Event(10, "start", "first"))
+    engine.schedule(Event(10, "ping", "already queued"))
+
+    engine.run_until(10)
+
+    assert log == [(10, "first"), (10, "already queued"), (10, "follow-up")]
