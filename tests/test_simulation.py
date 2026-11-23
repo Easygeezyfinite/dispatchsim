@@ -1,5 +1,6 @@
 import pytest
 
+from dispatchsim.eta_model.rush_hour import RushHourETAModel
 from dispatchsim.simulator.location import Location, travel_time_seconds
 from dispatchsim.simulator.models import Courier, CourierStatus, Order, OrderStatus
 from dispatchsim.simulator.simulation import Simulation
@@ -166,3 +167,21 @@ def test_order_created_in_the_past_is_rejected():
     sim.run_until(500)
     with pytest.raises(ValueError):
         sim.add_order(make_order(created_at=100, food_ready_at=100))
+
+
+def test_travel_model_uses_each_legs_departure_time():
+    sim = Simulation([make_courier()], first_idle_courier, eta_model=RushHourETAModel())
+    rush_hour = 8 * 3600
+    off_peak = 9 * 3600
+    rush_hour_order = make_order(created_at=rush_hour)
+    second_order = make_order(order_id="order_2", created_at=rush_hour, food_ready_at=off_peak)
+    sim.add_order(rush_hour_order)
+    sim.add_order(second_order)
+    sim.run_until(off_peak + TO_CUSTOMER + 60)
+
+    assert rush_hour_order.picked_up_at == pytest.approx(rush_hour + TO_RESTAURANT * 1.35)
+    assert rush_hour_order.delivered_at == pytest.approx(
+        rush_hour + (TO_RESTAURANT + TO_CUSTOMER) * 1.35
+    )
+    assert second_order.picked_up_at == pytest.approx(off_peak)
+    assert second_order.delivered_at == pytest.approx(off_peak + TO_CUSTOMER)

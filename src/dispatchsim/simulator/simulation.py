@@ -15,8 +15,9 @@ simulator and be compared fairly.
 from collections import deque
 from collections.abc import Callable
 
+from dispatchsim.eta_model import ETAModel
+from dispatchsim.eta_model.factory import create_eta_model
 from dispatchsim.simulator.event_engine import Event, EventEngine
-from dispatchsim.simulator.location import travel_time_seconds
 from dispatchsim.simulator.models import Courier, Order
 
 # Given an order and the couriers who are idle right now, pick one (or None to
@@ -25,9 +26,16 @@ DispatchPolicy = Callable[[Order, list[Courier]], Courier | None]
 
 
 class Simulation:
-    def __init__(self, couriers: list[Courier], dispatch_policy: DispatchPolicy) -> None:
+    def __init__(
+        self,
+        couriers: list[Courier],
+        dispatch_policy: DispatchPolicy,
+        *,
+        eta_model: ETAModel | None = None,
+    ) -> None:
         self.engine = EventEngine()
         self.dispatch_policy = dispatch_policy
+        self.eta_model = create_eta_model() if eta_model is None else eta_model
         self.couriers = {courier.courier_id: courier for courier in couriers}
         if len(self.couriers) != len(couriers):
             raise ValueError("courier ids must be unique")
@@ -77,7 +85,9 @@ class Simulation:
     def _assign(self, order: Order, courier: Courier, now: float) -> None:
         order.assign(courier.courier_id, now)
         courier.start_order(order.order_id)
-        trip = travel_time_seconds(courier.location, order.restaurant, courier.speed_kmh)
+        trip = self.eta_model.travel_time_seconds(
+            courier.location, order.restaurant, courier.speed_kmh, departure_at=now
+        )
         self.engine.schedule(Event(now + trip, "courier_arrived_at_restaurant", order.order_id))
 
     # Event handlers
@@ -98,7 +108,9 @@ class Simulation:
         courier = self.couriers[order.courier_id]
         order.pick_up(engine.current_time)
         courier.leave_restaurant_with_food(order.restaurant)
-        trip = travel_time_seconds(order.restaurant, order.customer, courier.speed_kmh)
+        trip = self.eta_model.travel_time_seconds(
+            order.restaurant, order.customer, courier.speed_kmh, departure_at=engine.current_time
+        )
         engine.schedule(Event(engine.current_time + trip, "order_delivered", order.order_id))
 
     def _on_order_delivered(self, event: Event, engine: EventEngine) -> None:
